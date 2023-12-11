@@ -29,78 +29,36 @@ def set_background(image_file):
     st.markdown(style, unsafe_allow_html=True)
 
 
-def diagnosis(file):
-    IMM_SIZE = 224  # Replace with your desired size
+def classify(image, model, class_names):
+    """
+    This function takes an image, a model, and a list of class names and returns the predicted class and confidence
+    score of the image.
 
-    # Download image
-    ## YOUR CODE GOES HERE ##
+    Parameters:
+        image (PIL.Image.Image): An image to be classified.
+        model (tensorflow.keras.Model): A trained machine learning model for image classification.
+        class_names (list): A list of class names corresponding to the classes that the model can predict.
 
-    # Initialize image variable
-    image = None
+    Returns:
+        A tuple of the predicted class name and the confidence score for that prediction.
+    """
+    # convert image to (224, 224)
+    image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
 
-    try:
-        # Attempt to read the image from the file
-        image = mh.imread(file)
-    except Exception as e:
-        # Print an error message if the image cannot be read
-        print(f"Error reading image from {file}: {e}")
+    # convert image to numpy array
+    image_array = np.asarray(image)
 
-    # Check if image is None (i.e., an error occurred during image reading)
-    if image is None:
-        # Handle the error or return an appropriate value
-        return None
+    # normalize image
+    normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
 
-    # Prepare image for classification
-    ## YOUR CODE GOES HERE ##
+    # set model input
+    data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+    data[0] = normalized_image_array
 
-    # Check if the image has more than 2 dimensions (i.e., it's RGB or has an alpha channel)
-    if len(image.shape) > 2:
-        # Resize RGB and PNG images
-        image = mh.resize_to(image, [IMM_SIZE, IMM_SIZE, image.shape[2]])
-    else:
-        # Resize grayscale images
-        image = mh.resize_to(image, [IMM_SIZE, IMM_SIZE])
-
-    # Check if the image has more than 2 dimensions (i.e., it's RGB)
-    if len(image.shape) > 2:
-        # Convert RGB to grayscale and remove alpha channel
-        image = mh.colors.rgb2grey(image[:, :, :3], dtype=np.uint8)
-
-    # Load model
-    ## YOUR CODE GOES HERE ##
-
-    # Load model architecture from JSON file
-    with open('model.json', 'r') as json_file:
-        loaded_model_json = json_file.read()
-
-    # Close the JSON file
-    model = model_from_json(loaded_model_json)
-
-    # Load weights into the new model
-    model.load_weights("model.h5")
-
-    # Load history and lab from pickle files
-    with open('history.pickle', 'rb') as f:
-        history = pickle.load(f)
-
-    with open('lab.pickle', 'rb') as f:
-        lab = pickle.load(f)
-
-    # Normalize the data
-    ## YOUR CODE GOES HERE ##
-    image = np.array(image) / 255
-
-    # Reshape input images
-    ## YOUR CODE GOES HERE ##
-    image = image.reshape(-1, IMM_SIZE, IMM_SIZE, 1)
-
-    # Predict the diagnosis
-    ## YOUR CODE GOES HERE ##
+    # make prediction
     predicted_probabilities = model.predict(image)
     diag = np.argmax(predicted_probabilities, axis=-1)
-
-    # Find the name of the diagnosis
-    ## YOUR CODE GOES HERE ##
+    # index = np.argmax(prediction)
     diag = list(lab.keys())[list(lab.values()).index(diag[0])]
 
-    return diag
+    return class_name, confidence_score
