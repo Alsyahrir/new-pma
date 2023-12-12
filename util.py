@@ -2,10 +2,6 @@ import base64
 import streamlit as st
 from PIL import ImageOps, Image
 import numpy as np
-!pip install mahotas
-import mahotas as mh
-from keras.models import model_from_json
-import pickle
 
 def set_background(image_file):
     """
@@ -23,45 +19,12 @@ def set_background(image_file):
     style = f"""
         <style>
         .stApp {{
-            background-image: url(data:bgs/bg5.png;base64,{b64_encoded});
+            background-image: url(data:image/png;base64,{b64_encoded});
             background-size: cover;
         }}
         </style>
     """
     st.markdown(style, unsafe_allow_html=True)
-
-
-def classify(image, model, lab):
-    """
-    This function takes an image, a model, and a label mapping and returns the predicted diagnosis.
-
-    Parameters:
-        image (PIL.Image.Image): An image to be classified.
-        model (keras.Model): A trained machine learning model for diagnosis prediction.
-        lab (dict): A mapping of diagnosis labels to integer values.
-
-    Returns:
-        The predicted diagnosis.
-    """
-    # convert image to (224, 224)
-    image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
-
-    # convert image to numpy array
-    image_array = np.asarray(image)
-
-    # normalize image
-    normalized_image_array = image_array / 255.0
-
-    # reshape input images
-    image_input = normalized_image_array.reshape(-1, 224, 224, 1)
-
-    # make prediction
-    predicted_probabilities = model.predict(image_input)
-    diagnosis_index = np.argmax(predicted_probabilities, axis=-1)
-    predicted_diagnosis = list(lab.keys())[list(lab.values()).index(diagnosis_index[0])]
-
-    return predicted_diagnosis
-
 
 # Example usage in Streamlit app
 # Assume 'model', 'lab', and 'image_file' are defined appropriately before this point
@@ -80,8 +43,8 @@ model.load_weights("model.h5")
 with open('lab.pickle', 'rb') as f:
     lab = pickle.load(f)
 
-# Load background image
-set_background("background_image.png")
+# Load background image from the "bgs" folder
+set_background("bgs/bg5.png")
 
 # Upload image in Streamlit
 uploaded_file = st.file_uploader("Choose an image...", type="jpg")
