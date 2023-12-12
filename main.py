@@ -1,16 +1,25 @@
-import sys
-import os
-
-# Add the directory containing util.py to the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 import streamlit as st
-from keras.models import load_model
+from keras.models import model_from_json
 from PIL import Image
-from .util import classify, set_background
+from util import classify, set_background
+import pickle
 
-# Set background
-set_background('./bgs/bg5.png')
+# Load model architecture from JSON file
+with open('model.json', 'r') as json_file:
+    loaded_model_json = json_file.read()
+
+# Close the JSON file
+model = model_from_json(loaded_model_json)
+
+# Load weights into the new model
+model.load_weights("model.h5")
+
+# Load label mapping from pickle file
+with open('lab.pickle', 'rb') as f:
+    lab = pickle.load(f)
+
+# Load background image
+set_background("bg5.png")
 
 # Set title
 st.title('Pneumonia classification')
@@ -19,23 +28,15 @@ st.title('Pneumonia classification')
 st.header('Please upload a chest X-ray image')
 
 # Upload file
-file = st.file_uploader('', type=['jpeg', 'jpg', 'png'])
-
-# Load classifier
-model = load_model('./model/pmacp05.h5')
-
-# Load class names
-with open('./model/labels.txt', 'r') as f:
-    class_names = [a[:-1].split(' ')[1] for a in f.readlines()]
+uploaded_file = st.file_uploader("Choose an image...", type="jpg")
 
 # Display image
-if file is not None:
-    image = Image.open(file).convert('RGB')
-    st.image(image, use_column_width=True)
+if uploaded_file is not None:
+    # Read image from the uploaded file
+    image = Image.open(uploaded_file)
 
-    # Classify image
-    class_name, conf_score = classify(image, model, class_names)
+    # Classify the image using the model
+    predicted_diagnosis = classify(image, model, lab)
 
-    # Write classification
-    st.write("## {}".format(class_name))
-    st.write("### score: {}%".format(int(conf_score * 1000) / 10))
+    # Display the result
+    st.write(f"Predicted Diagnosis: {predicted_diagnosis}")
