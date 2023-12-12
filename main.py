@@ -19,7 +19,7 @@ with open('lab.pickle', 'rb') as f:
     lab = pickle.load(f)
 
 # Load background image
-set_background("bg5.png")
+set_background("bgs/bg5.png")
 
 # Set title
 st.title('Pneumonia classification')
