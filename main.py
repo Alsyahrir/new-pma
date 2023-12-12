@@ -18,7 +18,7 @@ model.load_weights("model.h5")
 with open('lab.pickle', 'rb') as f:
     lab = pickle.load(f)
 
-# Load background image
+# Load background image from the "bgs" folder
 set_background("bgs/bg5.png")
 
 # Set title
