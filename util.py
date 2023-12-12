@@ -23,7 +23,7 @@ def set_background(image_file):
     style = f"""
         <style>
         .stApp {{
-            background-image: url(data:image/png;base64,{b64_encoded});
+            background-image: url(data:bgs/bg5.png;base64,{b64_encoded});
             background-size: cover;
         }}
         </style>
