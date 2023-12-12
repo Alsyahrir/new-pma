@@ -2,6 +2,7 @@ import base64
 import streamlit as st
 from PIL import ImageOps, Image
 import numpy as np
+!pip install mahotas
 import mahotas as mh
 from keras.models import model_from_json
 import pickle
