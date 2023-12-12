@@ -1,9 +1,13 @@
+import sys
+import os
+
+# Add the directory containing util.py to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import streamlit as st
 from keras.models import load_model
 from PIL import Image
-import numpy as np
-
-from util import classify, set_background  # Ensure that 'util.py' is in the same directory or in the Python path
+from util import classify, set_background
 
 # Set background
 set_background('./bgs/bg5.png')
@@ -23,7 +27,6 @@ model = load_model('./model/pmacp05.h5')
 # Load class names
 with open('./model/labels.txt', 'r') as f:
     class_names = [a[:-1].split(' ')[1] for a in f.readlines()]
-    f.close()
 
 # Display image
 if file is not None:
