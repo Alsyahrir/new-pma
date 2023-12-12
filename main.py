@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 from keras.models import load_model
 from PIL import Image
-from util import classify, set_background
+from .util import classify, set_background
 
 # Set background
 set_background('./bgs/bg5.png')
