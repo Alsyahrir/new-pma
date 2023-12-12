@@ -1,9 +1,10 @@
 import base64
-
 import streamlit as st
 from PIL import ImageOps, Image
 import numpy as np
-
+import mahotas as mh
+from keras.models import model_from_json
+import pickle
 
 def set_background(image_file):
     """
@@ -29,18 +30,17 @@ def set_background(image_file):
     st.markdown(style, unsafe_allow_html=True)
 
 
-def classify(image, model, class_names):
+def classify(image, model, lab):
     """
-    This function takes an image, a model, and a list of class names and returns the predicted class and confidence
-    score of the image.
+    This function takes an image, a model, and a label mapping and returns the predicted diagnosis.
 
     Parameters:
         image (PIL.Image.Image): An image to be classified.
-        model (tensorflow.keras.Model): A trained machine learning model for image classification.
-        class_names (list): A list of class names corresponding to the classes that the model can predict.
+        model (keras.Model): A trained machine learning model for diagnosis prediction.
+        lab (dict): A mapping of diagnosis labels to integer values.
 
     Returns:
-        A tuple of the predicted class name and the confidence score for that prediction.
+        The predicted diagnosis.
     """
     # convert image to (224, 224)
     image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
@@ -49,16 +49,48 @@ def classify(image, model, class_names):
     image_array = np.asarray(image)
 
     # normalize image
-    normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+    normalized_image_array = image_array / 255.0
 
-    # set model input
-    data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-    data[0] = normalized_image_array
+    # reshape input images
+    image_input = normalized_image_array.reshape(-1, 224, 224, 1)
 
     # make prediction
-    predicted_probabilities = model.predict(image)
-    diag = np.argmax(predicted_probabilities, axis=-1)
-    # index = np.argmax(prediction)
-    diag = list(lab.keys())[list(lab.values()).index(diag[0])]
+    predicted_probabilities = model.predict(image_input)
+    diagnosis_index = np.argmax(predicted_probabilities, axis=-1)
+    predicted_diagnosis = list(lab.keys())[list(lab.values()).index(diagnosis_index[0])]
 
-    return class_name, confidence_score
+    return predicted_diagnosis
+
+
+# Example usage in Streamlit app
+# Assume 'model', 'lab', and 'image_file' are defined appropriately before this point
+
+# Load model architecture from JSON file
+with open('model.json', 'r') as json_file:
+    loaded_model_json = json_file.read()
+
+# Close the JSON file
+model = model_from_json(loaded_model_json)
+
+# Load weights into the new model
+model.load_weights("model.h5")
+
+# Load label mapping from pickle file
+with open('lab.pickle', 'rb') as f:
+    lab = pickle.load(f)
+
+# Load background image
+set_background("background_image.png")
+
+# Upload image in Streamlit
+uploaded_file = st.file_uploader("Choose an image...", type="jpg")
+
+if uploaded_file is not None:
+    # Read image from the uploaded file
+    image = Image.open(uploaded_file)
+
+    # Classify the image using the model
+    predicted_diagnosis = classify(image, model, lab)
+
+    # Display the result
+    st.write(f"Predicted Diagnosis: {predicted_diagnosis}")
